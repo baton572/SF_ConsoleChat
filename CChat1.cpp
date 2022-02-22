@@ -1,5 +1,8 @@
 #include "CChat1.h"
 
+#define ECHO true
+#define BROADCAST "common"
+
 CChat1::CChat1(
     void (*OutputString)(const std::string& _s),
     void (*InputString)(const std::string& _s, std::string& _t1))
@@ -30,31 +33,35 @@ void CChat1::CommandHandler(const std::string& _s)
     if (_s == "?")
     {
         s += "Commands:\r\n";
-        s += "users, adduser, deluser, enter, exit, send [login / all]\r\n";
+        s += "users, adduser, deluser, enter, exit, chats, show, send [login / common]\r\n";
         //
         DisplayMessage(s);
     }
     else
     {
-        if (_s == "status")
-        {
-            DisplayStatus();
-        }
-        else if (_s == "users")
+        //if (_s == "status")
+        //{
+        //    DisplayStatus();
+        //}
+        //else
+        if (_s == "users")
         {
             Users();
         }
         else if (_s == "adduser")
         {
-            AddUser();
+            if (!IsInUse(ECHO))
+                AddUser();
         }
         else if (_s == "deluser")
         {
-            DelUser();
+            if (!IsInUse(ECHO))
+                DelUser();
         }
         else if (_s == "enter")
         {
-            Enter();
+            if (!IsInUse(ECHO))
+                Enter();
         }
         else if (_s == "exit")
         {
@@ -62,7 +69,24 @@ void CChat1::CommandHandler(const std::string& _s)
         }
         else if (_s == "send")
         {
-            Send();
+            if (IsInUse())
+                Send();
+            else
+                DisplayMessage("\r\nChoose user!\r\n");
+        }
+        else if (_s == "chats")
+        {
+            if (IsInUse())
+                Chats();
+            else
+                DisplayMessage("\r\nChoose user!\r\n");
+        }
+        else if (_s == "show")
+        {
+            if (IsInUse())
+                ShowChat();
+            else
+                DisplayMessage("\r\nChoose user!\r\n");
         }
         else
         {
@@ -71,23 +95,23 @@ void CChat1::CommandHandler(const std::string& _s)
     }
 }
 
-void CChat1::DisplayStatus()
-{
-    std::string s = "\r\nChat 1.0\r\n";
-    s += "Users   : ";
-    s += std::to_string(m_users.size()) + "\r\n";
-    s += "Messages: ";
-    //
-    //for ()
-
-    //s += std::to_string(m_slotsEmpty) + "\r\n";
-    //s += "Slot size  : ";
-    //s += std::to_string(m_slotSize) + "\r\n";
-    //s += "Snack types: ";
-    //s += (m_types.size() > 0 ? std::to_string(m_types.size()) : "-") + "\r\n";
-    //
-    DisplayMessage(s);
-}
+//void CChat1::DisplayStatus()
+//{
+//    std::string s = "\r\nChat 1.0\r\n";
+//    s += "Users   : ";
+//    s += std::to_string(m_users.size()) + "\r\n";
+//    //s += "Messages: ";
+//    //
+//    //for ()
+//
+//    //s += std::to_string(m_slotsEmpty) + "\r\n";
+//    //s += "Slot size  : ";
+//    //s += std::to_string(m_slotSize) + "\r\n";
+//    //s += "Snack types: ";
+//    //s += (m_types.size() > 0 ? std::to_string(m_types.size()) : "-") + "\r\n";
+//    //
+//    DisplayMessage(s);
+//}
 
 void CChat1::Users()
 {
@@ -120,6 +144,12 @@ bool CChat1::AddUser()
 {
     std::string login;
     m_InputString("\r\nLogin: ", login);
+    //
+    if (login == BROADCAST)
+    {
+        DisplayMessage("Forbidden login!\r\n");
+        return false;
+    }
     //
     auto it = FindUser(login);
     if (it != m_users.end())
@@ -172,85 +202,155 @@ bool CChat1::DelUser()
     }
 }
 
-bool CChat1::Enter()
+bool CChat1::IsInUse(bool echo)
 {
     if (m_pCurrentUser)
     {
-        DisplayMessage("Interface is in use!\r\n");
+        if (echo)
+            DisplayMessage("Interface is in use!\r\n");
+        return true;
+    }
+    else
         return false;
+}
+
+bool CChat1::Enter()
+{
+    std::string s;
+    m_InputString("\r\nLogin: ", s);
+    //
+    auto it = FindUser(s);
+    if (it == m_users.end())
+    {
+        DisplayMessage("Login is not found!\r\n");
+        return false;
+    }
+    std::string pass;
+    m_InputString("\r\nPassword: ", pass);
+    //
+    DisplayMessage("");
+    //
+    if (pass == (*it)->GetPass())
+    {
+        m_pCurrentUser = *it;
+        return true;
     }
     else
     {
-        std::string s;
-        m_InputString("\r\nLogin: ", s);
-        //
-        auto it = FindUser(s);
-        if (it == m_users.end())
-        {
-            DisplayMessage("Login is not found!\r\n");
-            return false;
-        }
-        std::string pass;
-        m_InputString("\r\nPassword: ", pass);
-        //
-        DisplayMessage("");
-        //
-        if (pass == (*it)->GetPass())
-        {
-            m_pCurrentUser = *it;
-            return true;
-        }
-        else
-        {
-            DisplayMessage("Incorrect password!\r\n");
-            return false;
-        }
+        DisplayMessage("Incorrect password!\r\n");
+        return false;
     }
 }
 
-void CChat1::DisplayMessages()
+const std::string* CChat1::GetCurrentUser()
 {
+    const std::string* ret = nullptr;
+    //
     if (m_pCurrentUser)
-    {
-        for (auto from : m_pCurrentUser->m_messages)
-        Displa
-
-
-
-    }
+        ret = &(m_pCurrentUser->GetLogin());
+    return ret;
 }
 
-bool CChat1::Exit()
+//void CChat1::DisplayMessages()
+//{
+//    if (m_pCurrentUser)
+//    {
+//        //for (auto from : m_pCurrentUser->m_messages)
+//        //Displa
+//
+//
+//
+//    }
+//}
+
+void CChat1::Exit()
 {
     DisplayMessage("Interface is free!\r\n");
     //
-    if (m_pCurrentUser)
-        return true;
+    m_pCurrentUser = nullptr;
+}
+
+void CChat1::Chats()
+{
+    std::string s = "\r\nChats:";
+
+    std::list< std::string* > l;
+    m_pCurrentUser->GetChats(l);
+
+    if (l.size() > 0)
+    {
+        for (auto c: l)
+            s += "\r\nChat: " + *c;
+        s += "\r\n";
+    }
     else
+        s += " -\r\n";
+    //
+    DisplayMessage(s);
+}
+
+bool CChat1::ShowChat()
+{
+    std::string chat_name;
+    m_InputString("\r\nChat: ", chat_name);
+    //
+    std::list< std::string* > l;
+    m_pCurrentUser->GetMessages(chat_name, l);
+
+    if (l.size() > 0)
+    {
+        for (auto c : l)
+            DisplayMessage(*c);
+        DisplayMessage("");
+        return true;
+    }
+    else
+    {
+        DisplayMessage("Chat is not found!\r\n");
         return false;
+    }
 }
 
 bool CChat1::Send()
 {
+    bool ret = false;
+    //
     if (m_pCurrentUser)
     {
         std::string address;
-        std::string* message = new std::string;
+        std::string message;
         m_InputString("\r\nRecipient: ", address);
+        m_InputString("\r\nMessage:   ", message);
         //
-        m_InputString("\r\nMessage:   ", *message);
-
-        for (auto user : m_users)
+        // For simplicity, while sending messages is done by directly writing messages into the queue of the recipients
+        //
+        bool bBroadcast = address == BROADCAST;
+        //
+        for (auto itUser = m_users.begin(); itUser != m_users.end(); ++itUser)
         {
-            if (user->GetLogin() == address)
+            if (bBroadcast || ((*itUser)->GetLogin() == address))
             {
-                auto letter = ChatMessages(address, message);
-                (*user) << letter;
+                std::string* received_message = new std::string(
+                    bBroadcast ? m_pCurrentUser->GetLogin() + " >> " + message : "Received << " + message);
+                auto letter = CChatMessages(
+                    bBroadcast ? BROADCAST : m_pCurrentUser->GetLogin(),
+                    received_message);
+                (*(*itUser)) << letter;
                 //
-                return true;
+                ret = true;
+                //
+                if (!bBroadcast)
+                    break;
             }
+        }
+        //
+        if (ret && !bBroadcast)
+        {
+            std::string* sent_message = new std::string("Sent     >> " + message);
+            auto letter = CChatMessages(address, sent_message);
+            (*m_pCurrentUser) << letter;
         }
     }
     //
-    return false;
+    return ret;
 }

@@ -53,12 +53,16 @@ int main()
         std::cout << "\r                                                                 \r";
         //
         std::string sCommand;
-        GetT("Command: ", sCommand);
+        std::string sLogin;
+        auto pCurrentLogin = chat->GetCurrentUser();
+        if (pCurrentLogin)
+            sLogin = *pCurrentLogin + ": ";
+        else
+            sLogin = "Command: ";
+        GetT(sLogin, sCommand);
         //
         if (sCommand == "send")
         {
-            std::cout << std::endl;
-            //
             //std::string sLogin;
             //GetT("Enter login: ", sLogin);
             //

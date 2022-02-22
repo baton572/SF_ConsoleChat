@@ -5,8 +5,8 @@
 #include <map>
 #include "CUser.h"
 
-#define SLOTSMAX 80
-#define SLOTSIZE 10
+//#define SLOTSMAX 80
+//#define SLOTSIZE 10
 
 class CChat1
 {
@@ -25,7 +25,7 @@ public:
 
 	virtual void CommandHandler(const std::string&);
 
-	virtual void DisplayStatus();
+	//virtual void DisplayStatus();
 
 	virtual void DisplayMessage(const std::string&);
 
@@ -39,11 +39,19 @@ public:
 
 	virtual bool Enter();
 
-	virtual void DisplayMessages();
+	//virtual void DisplayMessages();
 
-	virtual bool Exit();
+	virtual void Exit();
 
 	virtual bool Send();
+
+	virtual bool IsInUse(bool echo = false);
+
+	virtual const std::string* GetCurrentUser();
+
+	virtual void Chats();
+
+	virtual bool ShowChat();
 
 private:
 	void (*m_OutputString)(const std::string& _s);
